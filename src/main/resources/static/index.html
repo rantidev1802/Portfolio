@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PortfolioPro - Stock Trading & Portfolio Management</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js for Financial Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <span class="brand-title">Portfolio<span class="highlight">Pro</span></span>
+                <span class="brand-sub">Trading & Risk Analytics</span>
+            </div>
+        </div>
+
+        <!-- Live Ticker Ribbon -->
+        <div class="ticker-ribbon" id="tickerRibbon">
+            <div class="ribbon-inner" id="ribbonContent">
+                <!-- Ticker items dynamically loaded -->
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <div class="nav-stat">
+                <span class="nav-stat-label">CASH BALANCE</span>
+                <span class="nav-stat-val text-green" id="navCashBalance">$0.00</span>
+            </div>
+            <div class="nav-stat">
+                <span class="nav-stat-label">NET ASSET VALUE</span>
+                <span class="nav-stat-val text-white" id="navTotalNav">$0.00</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btnDepositModal">
+                <i class="fa-solid fa-plus-circle"></i> Deposit
+            </button>
+            <button class="btn btn-outline-danger btn-sm" id="btnResetPortfolio" title="Reset to initial state">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        
+        <!-- Metric Cards Row -->
+        <section class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span>Portfolio Net Worth</span>
+                    <i class="fa-solid fa-vault text-blue"></i>
+                </div>
+                <div class="metric-value" id="cardTotalVal">$0.00</div>
+                <div class="metric-footer" id="cardDailyPnL">
+                    Day P&L: <span class="badge text-green">+$0.00 (0.0%)</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span>Total Unrealized P&L</span>
+                    <i class="fa-solid fa-chart-pie text-purple"></i>
+                </div>
+                <div class="metric-value" id="cardUnrealizedPnL">$0.00</div>
+                <div class="metric-footer" id="cardUnrealizedPct">
+                    Return: <span class="badge text-green">+0.00%</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span>Realized Profit/Loss</span>
+                    <i class="fa-solid fa-receipt text-yellow"></i>
+                </div>
+                <div class="metric-value" id="cardRealizedPnL">$0.00</div>
+                <div class="metric-footer">
+                    <span>Closed trades cumulative</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span>Portfolio Risk Level</span>
+                    <i class="fa-solid fa-shield-halved text-cyan"></i>
+                </div>
+                <div class="metric-value" id="cardRiskLevel">--</div>
+                <div class="metric-footer" id="cardSharpe">
+                    Sharpe: <strong class="text-white">--</strong> | Beta: <strong class="text-white">--</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- Central Dashboard Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Left / Center Section: Trading & Analysis -->
+            <div class="content-left">
+                
+                <!-- Stock Ticker Selector Bar -->
+                <div class="selector-card">
+                    <div class="selector-pills" id="stockPills">
+                        <!-- Pill buttons for stocks -->
+                    </div>
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="tickerSearchInput" placeholder="Enter symbol (e.g. AAPL, NVDA)...">
+                    </div>
+                </div>
+
+                <!-- Stock Header Banner -->
+                <div class="stock-banner" id="stockBanner">
+                    <div class="stock-info">
+                        <div class="stock-sym-wrapper">
+                            <h1 class="stock-sym" id="displaySymbol">AAPL</h1>
+                            <span class="stock-badge" id="displaySector">Technology</span>
+                        </div>
+                        <div class="stock-name" id="displayCompanyName">Apple Inc.</div>
+                    </div>
+                    <div class="stock-price-block">
+                        <div class="price-val" id="displayPrice">$0.00</div>
+                        <div class="price-delta" id="displayDelta">
+                            <span class="change-tag text-green">+$0.00 (+0.00%)</span>
+                        </div>
+                    </div>
+                    <div class="stock-stats-strip">
+                        <div><span class="stat-lbl">Day High</span><strong id="displayHigh">$0.00</strong></div>
+                        <div><span class="stat-lbl">Day Low</span><strong id="displayLow">$0.00</strong></div>
+                        <div><span class="stat-lbl">Volume</span><strong id="displayVolume">0</strong></div>
+                        <div><span class="stat-lbl">Prev Close</span><strong id="displayPrevClose">$0.00</strong></div>
+                    </div>
+                </div>
+
+                <!-- Chart Section -->
+                <div class="chart-card">
+                    <div class="chart-toolbar">
+                        <div class="chart-title">
+                            <i class="fa-solid fa-chart-candlestick"></i> Market Price & Indicator Engine
+                        </div>
+                        <div class="chart-tabs">
+                            <button class="chart-tab active" data-chart="price">Price & SMA (20/50)</button>
+                            <button class="chart-tab" data-chart="rsi">RSI (14)</button>
+                            <button class="chart-tab" data-chart="macd">MACD & Signal</button>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="marketChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Technical & Fundamental Analysis Tabs -->
+                <div class="analysis-card">
+                    <div class="analysis-tabs">
+                        <button class="analysis-tab active" data-target="technicalTab">
+                            <i class="fa-solid fa-wave-square"></i> Technical Analysis
+                        </button>
+                        <button class="analysis-tab" data-target="fundamentalTab">
+                            <i class="fa-solid fa-building-columns"></i> Fundamental Analysis
+                        </button>
+                    </div>
+
+                    <!-- Technical Tab Content -->
+                    <div class="tab-pane active" id="technicalTab">
+                        <div class="tech-grid">
+                            <div class="signal-box">
+                                <div class="signal-title">CONSENSUS SIGNAL</div>
+                                <div class="signal-badge" id="techSignalBadge">ANALYZING...</div>
+                                <div class="signal-desc" id="techSignalSummary">Aggregating oscillators and trend indicators</div>
+                            </div>
+                            <div class="tech-indicator-items">
+                                <div class="tech-item">
+                                    <span class="tech-label">Relative Strength Index (RSI 14)</span>
+                                    <span class="tech-val" id="techRsi">--</span>
+                                    <small id="techRsiDesc" class="tech-sub">Momentum gauge</small>
+                                </div>
+                                <div class="tech-item">
+                                    <span class="tech-label">MACD (12, 26, 9)</span>
+                                    <span class="tech-val" id="techMacd">--</span>
+                                    <small id="techMacdDesc" class="tech-sub">Trend convergence</small>
+                                </div>
+                                <div class="tech-item">
+                                    <span class="tech-label">20-Day SMA / 50-Day SMA</span>
+                                    <span class="tech-val" id="techSma">-- / --</span>
+                                    <small class="tech-sub">Trend moving averages</small>
+                                </div>
+                                <div class="tech-item">
+                                    <span class="tech-label">Bollinger Bands (20, 2)</span>
+                                    <span class="tech-val" id="techBollinger">-- / --</span>
+                                    <small class="tech-sub">Volatility envelope</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fundamental Tab Content -->
+                    <div class="tab-pane" id="fundamentalTab">
+                        <div class="fund-grid">
+                            <div class="fund-item">
+                                <span class="fund-label">Market Capitalization</span>
+                                <span class="fund-val" id="fundMarketCap">--</span>
+                            </div>
+                            <div class="fund-item">
+                                <span class="fund-label">P/E Ratio (TTM)</span>
+                                <span class="fund-val" id="fundPe">--</span>
+                            </div>
+                            <div class="fund-item">
+                                <span class="fund-label">Forward P/E</span>
+                                <span class="fund-val" id="fundForwardPe">--</span>
+                            </div>
+                            <div class="fund-item">
+                                <span class="fund-label">EPS (Earnings / Share)</span>
+                                <span class="fund-val" id="fundEps">--</span>
+                            </div>
+                            <div class="fund-item">
+                                <span class="fund-label">Dividend Yield</span>
+                                <span class="fund-val" id="fundDividend">--</span>
+                            </div>
+                            <div class="fund-item">
+                                <span class="fund-label">52-Week Range</span>
+                                <span class="fund-val" id="fund52w">--</span>
+                            </div>
+                            <div class="fund-item">
+                                <span class="fund-label">Asset Beta (vs SPY)</span>
+                                <span class="fund-val" id="fundBeta">--</span>
+                            </div>
+                            <div class="fund-item">
+                                <span class="fund-label">Analyst Target / Rating</span>
+                                <span class="fund-val text-green" id="fundRating">--</span>
+                            </div>
+                        </div>
+                        <div class="fund-desc" id="fundDesc">
+                            Loading company description...
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Order Execution & Risk & Allocation -->
+            <div class="content-right">
+                
+                <!-- Trade Execution Widget -->
+                <div class="card trade-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-bolt text-yellow"></i> Trade Execution
+                        </div>
+                        <span class="badge text-green" id="orderBookStatus">LIVE MARKET</span>
+                    </div>
+
+                    <div class="order-type-tabs">
+                        <button class="order-type-btn active" id="tabBuy" onclick="switchOrderType('BUY')">BUY</button>
+                        <button class="order-type-btn" id="tabSell" onclick="switchOrderType('SELL')">SELL</button>
+                    </div>
+
+                    <form id="tradeForm" onsubmit="handleTradeSubmit(event)">
+                        <div class="form-group">
+                            <label>Stock Symbol</label>
+                            <input type="text" id="orderSymbol" class="form-input" readonly value="AAPL">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Execution Price (Market)</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">$</span>
+                                <input type="text" id="orderPrice" class="form-input" readonly value="0.00">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="label-with-action">
+                                <label>Quantity (Shares)</label>
+                                <span class="action-subtext" id="tradeAvailableLabel">Available: $0.00</span>
+                            </div>
+                            <input type="number" id="orderQty" class="form-input" min="1" step="1" value="10" required oninput="calculateOrderEstimate()">
+                            
+                            <div class="qty-quick-btns">
+                                <button type="button" class="btn-chip" onclick="setQuickQty(5)">+5</button>
+                                <button type="button" class="btn-chip" onclick="setQuickQty(10)">+10</button>
+                                <button type="button" class="btn-chip" onclick="setQuickQty(25)">+25</button>
+                                <button type="button" class="btn-chip" onclick="setQuickQty(100)">+100</button>
+                                <button type="button" class="btn-chip" onclick="setMaxQty()">Max</button>
+                            </div>
+                        </div>
+
+                        <div class="order-summary-box">
+                            <div class="summary-line">
+                                <span>Estimated Total</span>
+                                <strong id="orderTotalCost">$0.00</strong>
+                            </div>
+                            <div class="summary-line">
+                                <span>Trading Fee</span>
+                                <span class="text-green">$0.00 (Zero Commission)</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" id="btnExecuteTrade">
+                            <i class="fa-solid fa-arrow-right-arrow-left"></i> Execute BUY Order
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Risk Management Card -->
+                <div class="card risk-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-chart-line text-cyan"></i> Portfolio Risk Management
+                        </div>
+                    </div>
+                    <div class="risk-metrics-list">
+                        <div class="risk-row">
+                            <div class="risk-info">
+                                <span class="risk-name">Sharpe Ratio</span>
+                                <small class="text-muted">Excess return per unit risk</small>
+                            </div>
+                            <strong class="risk-val" id="riskSharpe">--</strong>
+                        </div>
+                        <div class="risk-row">
+                            <div class="risk-info">
+                                <span class="risk-name">Portfolio Beta (SPY)</span>
+                                <small class="text-muted">Sensitivity to broader market</small>
+                            </div>
+                            <strong class="risk-val" id="riskBeta">--</strong>
+                        </div>
+                        <div class="risk-row">
+                            <div class="risk-info">
+                                <span class="risk-name">1-Day VaR (95%)</span>
+                                <small class="text-muted">Value at Risk dollar limit</small>
+                            </div>
+                            <strong class="risk-val text-red" id="riskVarDollar">--</strong>
+                        </div>
+                        <div class="risk-row">
+                            <div class="risk-info">
+                                <span class="risk-name">Annualized Volatility</span>
+                                <small class="text-muted">Standard deviation of returns</small>
+                            </div>
+                            <strong class="risk-val" id="riskVolatility">--</strong>
+                        </div>
+                        <div class="risk-row">
+                            <div class="risk-info">
+                                <span class="risk-name">Maximum Drawdown</span>
+                                <small class="text-muted">Peak-to-trough decline</small>
+                            </div>
+                            <strong class="risk-val text-red" id="riskDrawdown">--</strong>
+                        </div>
+                        <div class="risk-row">
+                            <div class="risk-info">
+                                <span class="risk-name">Diversification Score</span>
+                                <small class="text-muted">Herfindahl asset spread</small>
+                            </div>
+                            <strong class="risk-val text-green" id="riskDiversification">--</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Asset Allocation Doughnut Chart -->
+                <div class="card allocation-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-pie-chart text-purple"></i> Asset Allocation
+                        </div>
+                    </div>
+                    <div class="allocation-chart-wrapper">
+                        <canvas id="allocationChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Portfolio Holdings Table Section -->
+        <section class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fa-solid fa-briefcase text-blue"></i> Portfolio Holdings & Open Positions
+                </div>
+                <div class="section-actions">
+                    <span class="badge" id="holdingsCountBadge">0 Positions Active</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table" id="holdingsTable">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Company</th>
+                            <th>Shares</th>
+                            <th>Avg Cost</th>
+                            <th>Market Price</th>
+                            <th>Market Value</th>
+                            <th>Cost Basis</th>
+                            <th>Unrealized P&L</th>
+                            <th>Weight</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holdingsBody">
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-muted">Loading holdings...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Transaction History Audit Trail -->
+        <section class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fa-solid fa-clock-rotate-left text-yellow"></i> Order Execution Audit Trail
+                </div>
+                <div class="section-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="loadTransactionHistory()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Timestamp</th>
+                            <th>Type</th>
+                            <th>Symbol</th>
+                            <th>Shares</th>
+                            <th>Price</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">No trade history recorded yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Deposit Cash Modal -->
+    <div class="modal-overlay" id="depositModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-money-bill-wave text-green"></i> Deposit Virtual Cash</h3>
+                <button class="modal-close" onclick="closeModal('depositModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-help">Add simulated paper funds to your trading cash balance:</p>
+                <div class="form-group">
+                    <label>Amount (USD)</label>
+                    <div class="input-with-prefix">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="depositAmount" class="form-input" value="10000" min="100" step="500">
+                    </div>
+                </div>
+                <div class="qty-quick-btns">
+                    <button type="button" class="btn-chip" onclick="setDepositValue(5000)">+$5,000</button>
+                    <button type="button" class="btn-chip" onclick="setDepositValue(10000)">+$10,000</button>
+                    <button type="button" class="btn-chip" onclick="setDepositValue(25000)">+$25,000</button>
+                    <button type="button" class="btn-chip" onclick="setDepositValue(50000)">+$50,000</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('depositModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitDeposit()">Confirm Deposit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
+
